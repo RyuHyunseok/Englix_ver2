@@ -8,17 +8,68 @@ import pandas as pd
 import requests
 from traitlets import default
 from pprint import pprint
+from functools import partial
 
+# apps.py 의 역할
+# Django 애플리케이션의 설정과 초기화 로직을 정의하는 곳
+# 애플리케이션이 로드될 때 특정 작업(신호 연결, 데이터 초기화) 수행
 
+# apps.py의 실행흐름
+# 1. Django가 애플리케이션을 로드할 때:
+# - INSTALLED_APPS에 등록된 각 애플리케이션의 AppConfig 클래스가 실행된다.
+# - AppConfig의 ready() 메서드가 호출됨
+# - 여기서 초기화 작업(신호 연결, 데이터 로드)를 수행함.
+
+# ready()의 사용 예시:
+# - 신호(signals) 연결
+# - 데이터 초기화.
+# - 외부 서비스와 초기 통신 설정.
+
+# AppConfig
+# :Django가 각 애플리케이션을 관리하기 위한 기본 클래스 
+
+# MovieConfig 
+# :AppConfig를 상속받아 movie 애플리케이션의 설정을 정의한 커스텀 클래스.
 class MovieConfig(AppConfig):
+
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'movie'
+    # Django가 이 name으로 애플리케이션을 식별함함
 
     def ready(self):
+        from .models import Genre, Movie, Script
+        from django.conf import settings
+
         # apps.py의 ready 함수
         # movie 앱이 처음 시작될 때 수행되는 함수
+        
+        # Django의 Signals : 특정 이벤트가 발생했을 때 미리 정의된 핸들러 함수를 실행하도록 하는 Observer 패턴의 구현
+        # 애플리케이션의 특정 동작에 대해 자동으로 반응할 수 있는 좋은 도구.
+        # 해당 app에 signals.py를 만들어 커스털 signal을 정의할 수 있음.
+
+        # Observer 패턴이란
+        # : 객체의 상태 변화를 다른 객체들이 감지하고 처리하는 디자인 패턴(Django의 Signals, Spring의 이벤트 시스템, UI 업데이트 시스템)
+
+        # signal.connect(receiver, sender, **kwargs)
+        # signal : 연결할 signal 객체
+        # receiver : signal이 발생할 때 호출할 함수 또는 메서드
+        # sender : signal을 발신하는 객체를 지정. sender를 지정하지 않으면 모든 sender에 대해 signal을 처리함.
+
+        # post_migrate 시그널은 데이터베이스 초기화 작업이나 기본 데이터를 삽입하는데 자주 사용됨.
         post_migrate.connect(self.load_vocabulary, sender=self)
-        # post_migrate 는 migrate 작업 후 실행되게 함
+        # post_migrate라는 signal이 발생할 때 self.load_vocabulary 라는 함수를 호출하도록 연결하는 코드
+        # sender=self 는 현재 클래스(MovieConfig)를 sender로 지정한 것이고, 이 의미는 MovieConfig 앱에 대한 post_migrate 시그널이
+        # 발생했을 때 이 함수가 호출된다는 뜻
+
+        # partial을 사용해 인자 미리 설정
+        load_genres_partial = partial(self.load_genres, Genre=Genre)
+        load_movies_partial = partial(self.load_movies, Movie=Movie, Genre=Genre, api_key=settings.TMDB_API_KEY)
+        load_subtitles_partial = partial(self.load_subtitles, Movie=Movie, Script=Script, api_key=settings.OPENSUBTITLES_API_KEY)
+
+        post_migrate.connect(load_genres_partial, sender=self)
+        post_migrate.connect(load_movies_partial, sender=self)
+        post_migrate.connect(load_subtitles_partial, sender=self)
+        
 
     def load_vocabulary(self, sender, **kwargs):
         from .models import VocabularyWord, Genre, Movie, Script
@@ -29,13 +80,15 @@ class MovieConfig(AppConfig):
         self.load_business_voca(VocabularyWord)
         self.load_daily_voca(VocabularyWord)
 
-        # 이 부분은 SRP 원칙을 어긴 코드
-        # 원래 하나의 함수는 관련된 하나의 기능을 하는게 맞음. 지금은 load_vocabulary 함수에 genre도 load하고 movie, subtitles도 load하고 있음
-        # ready 함수에 post_migrate.connect() 를 나눠서 적어야함
-        self.load_genres(Genre)
+        print("끝")
 
-        self.load_movies(Movie, Genre, settings.TMDB_API_KEY)
-        self.load_subtitles(Movie, Script, settings.OPENSUBTITLES_API_KEY)
+        # # 이 부분은 SRP 원칙을 어긴 코드
+        # # 원래 하나의 함수는 관련된 하나의 기능을 하는게 맞음. 지금은 load_vocabulary 함수에 genre도 load하고 movie, subtitles도 load하고 있음
+        # # ready 함수에 post_migrate.connect() 를 나눠서 적어야함
+        # self.load_genres(Genre)
+
+        # self.load_movies(Movie, Genre, settings.TMDB_API_KEY)
+        # self.load_subtitles(Movie, Script, settings.OPENSUBTITLES_API_KEY)
 
     def load_toeic_voca(self, VocabularyWord):
         # 파일 경로 설정 (여기서 경로는 파일의 실제 위치에 맞게 수정하세요)
@@ -154,7 +207,7 @@ class MovieConfig(AppConfig):
             except Exception as e:
                 print(f"파일 처리 중 오류 발생 {file_path}: {e}")
 
-    def load_genres(self, Genre):
+    def load_genres(self, Genre, sender, **kwargs):
         # TMDB 장르 데이터
         genres = [
             {'id': 28, 'name': 'Action'},
@@ -183,7 +236,7 @@ class MovieConfig(AppConfig):
             Genre.objects.get_or_create(id=genre['id'], name=genre['name'])
             print(f"장르 데이터 추가됨: {genre['name']}")
 
-    def load_movies(self, Movie, Genre, api_key):
+    def load_movies(self, Movie, Genre, api_key, sender, **kwargs):
         url = "https://api.themoviedb.org/3/discover/movie"
         movies_to_fetch = 15  # 가져올 총 영화 수 조절 가능
         movies_fetched = 0
@@ -267,7 +320,7 @@ class MovieConfig(AppConfig):
         except Exception as e:
             print(f"Error loading movies: {e}")
 
-    def load_subtitles(self, Movie, Script, api_key):
+    def load_subtitles(self, Movie, Script, api_key, sender, **kwargs):
         from .subtitle_utils import parse_srt, classify_difficulty_level, save_subtitle_to_db
         import time
 
