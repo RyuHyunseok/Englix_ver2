@@ -1,204 +1,245 @@
 <template>
-    <div class="page-container">
+  <div class="page-container">
 
-  <div v-if="movieDetail" class="movie-detail-container">
-    <!-- 헤더 섹션: 영화 기본 정보 -->
-    <div class="movie-header">
-      <div class="movie-basic-info">
-        <img :src="movieDetail.poster_path" :alt="movieDetail.title" class="movie-poster" />
-        <div class="movie-info">
-          <h1 class="movie-title">{{ movieDetail.title }}</h1>
-          <p class="release-date">개봉일: {{ movieDetail.release_date }}</p>
-          <p class="overview">{{ movieDetail.overview }}</p>
+    <div v-if="movieDetail" class="movie-detail-container">
+      <!-- 헤더 섹션: 영화 기본 정보 -->
+      <div class="movie-header">
+        <div class="movie-basic-info">
+          <img :src="movieDetail.poster_path" :alt="movieDetail.title" class="movie-poster" />
+          <div class="movie-info">
+            <h1 class="movie-title">{{ movieDetail.title }}</h1>
+            <p class="release-date">개봉일: {{ movieDetail.release_date }}</p>
+            <p class="overview">{{ movieDetail.overview }}</p>
 
-          <div class="action-buttons">
-            <!-- 찜하기 버튼에 팝업 메시지 추가 -->
-            <!-- 찜하기 버튼 -->
-            <button @click="toggleFavorite" class="favorite-btn" :class="{ 'is-favorite': isFavorite }">
-              <span class="star-icon">★</span>
-              {{ isFavorite ? "Remove from Favorites" : "Add to Favorites" }}
-              <span class="popup-message" :class="{ show: showFavPopup }">
-                {{ favPopupMessage }}
-                <span class="popup-emoji">{{ isFavorite ? "💖" : "💔" }}</span>
-              </span>
-            </button>
-
-   <!-- 영화 세부 정보 토글 버튼 -->
-   <button @click="toggleMovieDetails" class="details-btn">
-     {{ showDetails ? 'Hide Details ▲' : 'Show Details ▼' }}
-   </button>
-
-            <!-- 예고편 버튼 -->
-            <button @click="toggleTrailer" class="trailer-btn">
-              <span class="play-icon">{{ showTrailer ? "✕" : "▶" }}</span>
-              {{ showTrailer ? "Close Trailer" : "Watch Trailer" }}
-            </button>
-          </div>
-        </div>
-      </div>
-
- <!-- 영화 세부 정보 섹션 -->
- <div v-if="showDetails" class="movie-details-section">
-   <div class="details-grid">
-     <div class="detail-item">
-       <span class="detail-label">Director</span>
-       <span class="detail-value">{{ movieDetail.director }}</span>
-     </div>
-     <div class="detail-item">
-       <span class="detail-label">Runtime</span>
-       <span class="detail-value">{{ movieDetail.runtime }} minutes</span>
-     </div>
-     <div class="detail-item">
-       <span class="detail-label">Rating</span>
-       <span class="detail-badge">{{ convertedRating }}</span>
-     </div>
-   </div>
-   <div class="cast-section">
-     <span class="detail-label">Cast</span>
-     <div class="cast-members">
-       <div v-for="actor in movieDetail.cast" :key="actor.name" class="cast-member">
-         <span class="actor-name">{{ actor.name }}</span>
-         <span class="actor-character">as {{ actor.character }}</span>
-       </div>
-     </div>
-   </div>
- </div>
-
-
-      <!-- 트레일러 섹션 (토글) -->
-      <div v-if="showTrailer" class="trailer-section">
-        <iframe
-          width="100%"
-          height="500"
-          :src="`https://www.youtube.com/embed/${movieDetail.youtube_trailer_id}`"
-          frameborder="0"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </div>
-
-    <!-- 스크립트 분석 섹션 -->
-    <div class="script-analysis-section">
-      <h2 class="section-title">Script Analysis</h2>
-      <div class="scripts-container">
-        <div v-for="(data, script) in paginatedScripts" :key="script" class="script-card">
-          <div class="script-header" @click="handleScriptClick($event, script, data)">
-            <div class="script-content">
-              <p class="script-text">{{ script }}</p>
-              <span class="timestamp">Time: {{ data.timestamp }}</span>
-            </div>
-
-            <transition name="badge-fade">
-     <!-- 100 퍼센트 일 때 -->
-     <span v-if="data.highest_match_rate === 100" class="achievement-badge gold">
-       <i class="fas fa-trophy"></i> Perfect! (5 points)
-     </span>
-     <!-- 80퍼 이상 -->
-     <span v-else-if="data.highest_match_rate >= 80" class="achievement-badge silver">
-       <i class="fas fa-award"></i> Great! (3 points)
-     </span>
-     <!-- 60퍼 이상 -->
-     <span v-else-if="data.highest_match_rate >= 60" class="achievement-badge bronze">
-       <i class="fas fa-award"></i> Good! (1 points)
-     </span>
-   </transition>
-          </div>
-
-          <div class="word-list">
-            <h4 class="word-list-title">Key Words</h4>
-            <div class="words">
-              <!-- 단어 버튼 -->
-              <button v-for="word in data.words" :key="word.id" @click="addToFavoriteVoca(word.id)" class="word-chip">
-                {{ word.word }}
-                <span class="popup-message" :class="{ show: wordPopups[word.id] }">
-                  {{ wordPopupMessages[word.id] }}
-                  <span class="popup-emoji">{{ wordPopupEmojis[word.id] }}</span>
+            <div class="action-buttons">
+              <!-- 찜하기 버튼에 팝업 메시지 추가 -->
+              <!-- 찜하기 버튼 -->
+              <button @click="toggleFavorite" class="favorite-btn" :class="{ 'is-favorite': isFavorite }">
+                <span class="star-icon">★</span>
+                {{ isFavorite ? "Remove from Favorites" : "Add to Favorites" }}
+                <span class="popup-message" :class="{ show: showFavPopup }">
+                  {{ favPopupMessage }}
+                  <span class="popup-emoji">{{ isFavorite ? "💖" : "💔" }}</span>
                 </span>
+              </button>
+
+              <!-- 영화 세부 정보 토글 버튼 -->
+              <button @click="toggleMovieDetails" class="details-btn">
+                {{ showDetails ? 'Hide Details ▲' : 'Show Details ▼' }}
+              </button>
+
+              <!-- 예고편 버튼 -->
+              <button @click="toggleTrailer" class="trailer-btn">
+                <span class="play-icon">{{ showTrailer ? "✕" : "▶" }}</span>
+                {{ showTrailer ? "Close Trailer" : "Watch Trailer" }}
               </button>
             </div>
           </div>
-
-<!-- 녹음 영역 -->
-<div class="recording-section">
-  <div class="record-area">
-    <h4>Speech Practice</h4>
-    <div class="controls">
-      <button 
-        @click="toggleRecording(script, data.script_id)" 
-        :class="{ 'recording': isRecording[script] }"
-        class="record-button"
-      >
-        <span class="record-icon">🎤</span>
-        {{ isRecording[script] ? 'Stop Recording' : 'Start Recording' }}
-      </button>
-      
-      <div v-if="recordedAudio[script]" class="audio-controls">
-        <audio :src="recordedAudio[script]?.url" controls></audio>
-        <button 
-          @click="convertToText(script, data.script_id)" 
-          :disabled="isConverting[script]"
-          class="submit-button"
-        >
-          Check Pronunciation
-        </button>
-      </div>
-    </div>
-
-    <!-- 결과 표시 -->
-    <div v-if="practiceResults[script]" class="result-section">
-      <div class="result-header">
-        <h4>Your Result:</h4>
-        <div class="badges">
-          <span 
-            class="match-badge"
-            :class="getMatchRateClass(practiceResults[script].match_rate)"
-          >
-            {{ practiceResults[script].match_rate.toFixed(2) }}% Match
-          </span>
-          <span v-if="practiceResults[script].is_new_record" class="new-record-badge">
-            You've gained {{ practiceResults[script].points }} points!
-          </span>
         </div>
-      </div>
-      <div class="speech-comparison">
-        <div class="original-text">
-          <p class="label">Original:</p>
-          <p class="text">{{ script }}</p>
-        </div>
-        <div class="your-speech">
-          <p class="label">Your Speech:</p>
-          <p class="text">{{ practiceResults[script].text }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-          <!-- gpt 결과 -->
-          <div class="gpt-output" :class="{ active: gptOutputDisplay[script] }" v-show="gptOutputDisplay[script]">
-            <div class="loading" v-if="loadingDisplay[script]">
-              <div class="loading-spinner"></div>
-              Analyzing...
+        <!-- 영화 세부 정보 섹션 -->
+        <div v-if="showDetails" class="movie-details-section">
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Director</span>
+              <span class="detail-value">{{ movieDetail.director }}</span>
             </div>
-            <div class="content" :data-content="`content-${script.replace(/\s+/g, '-')}`"></div>
+            <div class="detail-item">
+              <span class="detail-label">Runtime</span>
+              <span class="detail-value">{{ movieDetail.runtime }} minutes</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Rating</span>
+              <span class="detail-badge">{{ convertedRating }}</span>
+            </div>
+          </div>
+          <div class="cast-section">
+            <span class="detail-label">Cast</span>
+            <div class="cast-members">
+              <div v-for="actor in movieDetail.cast" :key="actor.name" class="cast-member">
+                <span class="actor-name">{{ actor.name }}</span>
+                <span class="actor-character">as {{ actor.character }}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 페이지네이션 -->
-        <div class="pagination">
-          <button @click="handlePrevGroup" :disabled="currentPageGroup === 1" class="pagination-btn">Previous</button>
-          <div class="page-numbers">
-            <button v-for="pageNum in displayedPages" :key="pageNum" @click="currentPage = pageNum" class="page-number" :class="{ active: currentPage === pageNum }">
-              {{ pageNum }}
-            </button>
+
+        <!-- 트레일러 섹션 (토글) -->
+        <div v-if="showTrailer" class="trailer-section">
+          <iframe width="100%" height="500" :src="`https://www.youtube.com/embed/${movieDetail.youtube_trailer_id}`"
+            frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>
+      </div>
+
+      <!-- 스크립트 분석 섹션 
+데이터 흐름 및 구조:
+1. 데이터 로딩 순서:
+  - MovieList: 여러 영화의 기본 정보만 서버에 저장
+  - MovieDetail: 선택된 영화의 상세 정보만 요청
+  - onMounted -> fetchMovieDetail -> movieDetail 데이터 저장
+  - computed 속성인 paginatedScripts가 자동 계산되어 초기 화면 렌더링
+
+2. paginatedScripts (computed 속성):
+  - movieDetail 변경 시 자동 재계산
+  - itemsPerPage(5개)만큼 스크립트 분할하여 표시
+  - Object.entries()로 객체를 배열로 변환 후 slice로 페이지네이션
+  - Object.fromEntries()로 다시 배열을 객체로 변환하여 구조 유지
+  
+3. 데이터 구조 예시:
+  paginatedScripts = {
+    "Hello": {                // script 값
+      timestamp: "00:01:23",  // data.timestamp
+      words: [               // data.words
+        { id: 1, word: "Hello" },
+        { id: 2, word: "World" }
+      ],
+      highest_match_rate: 85  // 발음 평가 최고 점수
+    }
+  }
+
+4. 안전한 데이터 접근:
+  - movieDetail.value?.filtered_scripts로 옵셔널 체이닝 사용
+  - 데이터 없으면 빈 객체({}) 반환하여 에러 방지 -->
+
+      <div class="script-analysis-section">
+        <h2 class="section-title">Script Analysis</h2>
+        <div class="scripts-container">
+          <!-- 스크립트 반복 렌더링:
+   1. v-for로 현재 페이지의 스크립트만 렌더링
+   2. 각 스크립트는 독립적인:
+      - 클릭 이벤트
+      - GPT 분석 상태
+      - 녹음/재생 기능
+      - 발음 평가 결과를 가짐
+   3. key 속성으로 Vue의 가상 DOM 최적화 -->
+          <div v-for="(data, script) in paginatedScripts" :key="script" class="script-card">
+            <!-- 스크립트 헤더 클릭 이벤트:
+     1. 이미 분석된 경우:
+        - analyzedScripts[script] 체크
+        - gptOutputDisplay[script] 토글로 결과 표시/숨김
+     2. 새로운 분석 필요:
+        - loading 상태 표시
+        - axios로 GPT 분석 요청
+        - typeText로 결과 애니메이션 표시
+        - analyzedScripts에 분석 완료 표시 -->
+            <div class="script-header" @click="handleScriptClick($event, script, data)">
+              <div class="script-content">
+                <!-- script: 실제 대사 텍스트 (초기 로드 데이터) -->
+                <p class="script-text">{{ script }}</p>
+                <!-- timestamp: 영화 내 해당 대사 시점 -->
+                <span class="timestamp">Time: {{ data.timestamp }}</span>
+              </div>
+
+              <!-- 발음 평가 뱃지 (애니메이션 적용):
+       highest_match_rate 기준:
+       - 100%: 골드 뱃지, 5점
+       - 80% 이상: 실버 뱃지, 3점
+       - 60% 이상: 브론즈 뱃지, 1점 -->
+              <transition name="badge-fade">
+                <!-- 100 퍼센트 일 때 -->
+                <span v-if="data.highest_match_rate === 100" class="achievement-badge gold">
+                  <i class="fas fa-trophy"></i> Perfect! (5 points)
+                </span>
+                <!-- 80퍼 이상 -->
+                <span v-else-if="data.highest_match_rate >= 80" class="achievement-badge silver">
+                  <i class="fas fa-award"></i> Great! (3 points)
+                </span>
+                <!-- 60퍼 이상 -->
+                <span v-else-if="data.highest_match_rate >= 60" class="achievement-badge bronze">
+                  <i class="fas fa-award"></i> Good! (1 points)
+                </span>
+              </transition>
+            </div>
+
+            <div class="word-list">
+              <h4 class="word-list-title">Key Words</h4>
+              <div class="words">
+                <!-- 단어 버튼 -->
+                <button v-for="word in data.words" :key="word.id" @click="addToFavoriteVoca(word.id)" class="word-chip">
+                  {{ word.word }}
+                  <span class="popup-message" :class="{ show: wordPopups[word.id] }">
+                    {{ wordPopupMessages[word.id] }}
+                    <span class="popup-emoji">{{ wordPopupEmojis[word.id] }}</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 녹음 영역 -->
+            <div class="recording-section">
+              <div class="record-area">
+                <h4>Speech Practice</h4>
+                <div class="controls">
+                  <button @click="toggleRecording(script, data.script_id)" :class="{ 'recording': isRecording[script] }"
+                    class="record-button">
+                    <span class="record-icon">🎤</span>
+                    {{ isRecording[script] ? 'Stop Recording' : 'Start Recording' }}
+                  </button>
+
+                  <div v-if="recordedAudio[script]" class="audio-controls">
+                    <audio :src="recordedAudio[script]?.url" controls></audio>
+                    <button @click="convertToText(script, data.script_id)" :disabled="isConverting[script]"
+                      class="submit-button">
+                      Check Pronunciation
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 결과 표시 -->
+                <div v-if="practiceResults[script]" class="result-section">
+                  <div class="result-header">
+                    <h4>Your Result:</h4>
+                    <div class="badges">
+                      <span class="match-badge" :class="getMatchRateClass(practiceResults[script].match_rate)">
+                        {{ practiceResults[script].match_rate.toFixed(2) }}% Match
+                      </span>
+                      <span v-if="practiceResults[script].is_new_record" class="new-record-badge">
+                        You've gained {{ practiceResults[script].points }} points!
+                      </span>
+                    </div>
+                  </div>
+                  <div class="speech-comparison">
+                    <div class="original-text">
+                      <p class="label">Original:</p>
+                      <p class="text">{{ script }}</p>
+                    </div>
+                    <div class="your-speech">
+                      <p class="label">Your Speech:</p>
+                      <p class="text">{{ practiceResults[script].text }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- gpt 결과 -->
+            <div class="gpt-output" :class="{ active: gptOutputDisplay[script] }" v-show="gptOutputDisplay[script]">
+              <div class="loading" v-if="loadingDisplay[script]">
+                <div class="loading-spinner"></div>
+                Analyzing...
+              </div>
+              <div class="content" :data-content="`content-${script.replace(/\s+/g, '-')}`"></div>
+            </div>
           </div>
-          <button @click="handleNextGroup" :disabled="currentPageGroup >= maxPageGroup" class="pagination-btn">Next</button>
+
+          <!-- 페이지네이션 -->
+          <div class="pagination">
+            <button @click="handlePrevGroup" :disabled="currentPageGroup === 1" class="pagination-btn">Previous</button>
+            <div class="page-numbers">
+              <button v-for="pageNum in displayedPages" :key="pageNum" @click="currentPage = pageNum"
+                class="page-number" :class="{ active: currentPage === pageNum }">
+                {{ pageNum }}
+              </button>
+            </div>
+            <button @click="handleNextGroup" :disabled="currentPageGroup >= maxPageGroup"
+              class="pagination-btn">Next</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-    </div>
 </template>
 
 <script setup>
@@ -249,7 +290,7 @@ const toggleMovieDetails = () => {
 // 영화 등급
 const convertedRating = computed(() => {
   const usRating = movieDetail.value?.rating?.toUpperCase();
-  
+
   switch (usRating) {
     case 'G':
       return '전체 관람가'
@@ -281,7 +322,7 @@ const toggleRecording = async (script, scriptId) => {
 // 녹음 시작 함수
 const startRecording = async (script) => {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ 
+    const stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         sampleRate: 48000,
         channelCount: 1,
@@ -289,11 +330,11 @@ const startRecording = async (script) => {
         noiseSuppression: true,
       }
     });
-    
+
     mediaRecorder.value = new MediaRecorder(stream, {
       mimeType: 'audio/webm;codecs=opus'
     });
-    
+
     const chunks = [];
 
     mediaRecorder.value.ondataavailable = (e) => {
@@ -358,7 +399,7 @@ const convertToText = async (script, scriptId) => {
       is_new_record: response.data.is_new_record,
       points: response.data.points
     };
-        // 새로운 최고 기록일 경우 highest_match_rate 업데이트
+    // 새로운 최고 기록일 경우 highest_match_rate 업데이트
     if (paginatedScripts.value[script] && response.data.is_new_record) {
       paginatedScripts.value[script].highest_match_rate = response.data.match_rate;
     }
@@ -501,51 +542,159 @@ const addToFavoriteVoca = async (wordId) => {
     console.error("Error:", error);
   }
 };
+
+// Vue 컴포넌트의 script setup에서 실행되는 클릭 핸들러 함수
+// async/await 사용으로 비동기 처리
+// event: 클릭 이벤트 객체
+// script: 분석할 스크립트 텍스트
+// data: 스크립트 관련 정보를 담은 객체
+// 템플릿에서 @click="handleScriptClick($event, script, data)" 형태로 호출됨
 const handleScriptClick = async (event, script, data) => {
+  // analyzedScripts.value[script]: 스크립트가 이미 분석되었는지 여부를 저장하는 객체
+  // value[script]에서 script는 key값으로, 해당 스크립트 텍스트가 들어감
+  // value는 Vue의 ref()로 생성된 반응형 객체의 실제 값에 접근하기 위한 속성
+  // ref()로 생성된 객체는 .value로 실제 값에 접근해야 함
+  // .value가 없으면 Proxy 객체가 반환되어 실제 값 접근 불가
   if (analyzedScripts.value[script]) {
+    // 이미 분석된 스크립트라면 결과 표시를 토글
+    // gptOutputDisplay는 분석 결과의 화면 표시 여부를 제어하는 Vue의 반응형 객체
+    // true면 결과 표시, false면 결과 숨김
+    // 화면에서는 v-show 디렉티브로 이 값에 따라 표시/숨김 처리
+    // v-show는 display: none/block으로 화면 표시를 제어
+    // v-show와 달리 v-if는 DOM에서 요소를 완전히 제거/추가
     gptOutputDisplay.value[script] = !gptOutputDisplay.value[script];
     return;
   }
 
+  // 첫 분석 시에는 결과 표시 설정을 true로,
+  // gptOutputDisplay의 초기값은 false이며, 스크립트별로 개별적으로 관리됨
+  // key(script)-value(boolean) 형태로 저장
+  // Vue의 반응형 시스템이 이 값의 변화를 감지하여 화면을 자동으로 업데이트
   gptOutputDisplay.value[script] = true;
+  // 로딩 표시도 true로 설정
+  // loadingDisplay도 스크립트별로 로딩 상태를 개별 관리
+  // 분석이 완료되면 finally 블록에서 false로 변경됨
   loadingDisplay.value[script] = true;
 
   try {
+    // localStorage: 브라우저 제공 웹 스토리지 API, 도메인별로 5~10MB 저장 가능
+    // getItem: localStorage에서 데이터를 가져오는 메서드
+    // JSON.parse: 문자열로 저장된 데이터를 JavaScript 객체로 변환
+    // localStorage는 문자열만 저장 가능하므로, 객체는 JSON.stringify()로 저장하고
+    // 가져올 때는 JSON.parse()로 다시 객체로 변환
+    // localStorage는 브라우저를 닫아도 데이터가 유지되며, 도메인별로 독립적인 저장소를 가짐
+    // sessionStorage는 탭을 닫으면 데이터가 삭제된다는 점이 다름
+    // localStorage 데이터가 없거나 파싱 실패 시 에러 처리 필요
     const auth = JSON.parse(localStorage.getItem("auth"));
+    // 옵셔널 체이닝(?.)으로 auth가 null/undefined여도 에러 없이 처리
+    // auth 객체가 없으면 undefined 반환
+    // 옵셔널 체이닝이 없으면 auth가 null일 때 에러 발생
+    // 토큰이 없으면 로그인 필요 알림 처리 필요
     const token = auth?.token;
 
+    // axios로 서버에 POST 요청
+    // POST 사용 이유: 
+    // 1. 복잡한 데이터 전송 가능 (body에 데이터 전송)
+    // 2. URL 길이 제한 없음
+    // 3. 보안 (데이터가 URL에 노출되지 않음)
+    // 4. 서버에서 새로운 분석 결과 생성
+    // 5. 사용자별 학습 데이터 저장 가능
+    // GET 요청은 데이터가 URL에 노출되어 보안에 취약하고 데이터 크기 제한이 있음
     const response = await axios.post(
+      // 개발 환경의 URL. 배포 시에는 실제 도메인으로 변경 필요
+      // 환경변수(.env)를 사용하여 관리하는 것이 좋음
+      // VITE_API_URL=http://localhost:8000 형식으로 저장
+      // 실제 배포 시: VITE_API_URL=https://your-domain.com
+      // ${import.meta.env.VITE_API_URL}로 환경변수 사용
+      // 환경 변수 이름은 반드시 VITE_로 시작해야 함
+      // Django 서버의 분석 엔드포인트
+      // Django urls.py에서 정의된 URL과 매칭
+      // REST API 설계 규칙: POST는 새 리소스 생성
+      // 조회만 하는 경우에도 데이터가 크거나 보안이 필요하면 POST 사용
       "http://localhost:8000/movie/analyze_script/",
       {
-        script: script,
+        // request body
+        // request body 데이터는 Django에서 request.data로 접근
+        // request.data는 자동으로 JSON 파싱
+        script: script,  // 분석할 스크립트 텍스트
+        // data 객체는 v-for="(data, script) in paginatedScripts"에서 전달됨
+        // data.words는 해당 스크립트의 단어 배열 
+        // 배열 형태: [{ id: 1, word: "hello", meaning: "안녕" }, ...]
+        // 단일 값들(timestamp, script_id 등)은 문자열이나 숫자로 저장
+        // data 객체에는 words 외에도 timestamp, script_id 등의 정보가 있음
+        // script와 words만 전송하므로 필요한 최소한의 데이터만 전송
         words: data.words,
       },
       {
+        // request headers: HTTP 요청의 메타 정보
         headers: {
+          // 사용자 인증을 위한 토큰
+          // Django에서는 request.META.get('HTTP_AUTHORIZATION')으로 접근
+          // Django의 request.data['script']로 body 데이터 접근
+          // request.data는 Django REST Framework에서 제공하는 파싱된 요청 데이터
+          // 토큰으로 사용자 식별 후 개인화된 분석 결과 제공 가능
+          // 토큰 인증 방식으로 사용자 식별
+          // 토큰은 로그인 시 서버가 발급
+          // 이후 모든 API 요청에 토큰 포함
+          // 백엔드에서는 토큰으로 사용자 조회 후
+          // 사용자의 학습 수준, 학습 이력 등을 고려한 맞춤형 분석 제공
           Authorization: `Token ${token}`,
         },
       }
     );
 
-    // ref를 사용하여 DOM 요소 접근 방식 수정
+    // 응답 처리
+    // contentKey는 스크립트 텍스트에서 공백을 '-'로 변환하여 생성
+    // 이는 DOM 요소를 찾기 위한 식별자로 사용
+    // HTML에서는 <div class="content" :data-content="`content-${script.replace(/\s+/g, '-')}`">
+    // 형태로 매칭되는 요소가 있어야 함
     const contentKey = `content-${script.replace(/\s+/g, "-")}`;
     const contentElement = document.querySelector(`[data-content="${contentKey}"]`);
 
     if (contentElement) {
-      // 타이핑 효과 적용
+      // typeText는 별도로 정의된 함수로, 텍스트를 한 글자씩 타이핑하는 효과 구현
+      // speed 매개변수로 타이핑 속도 조절 가능
       typeText(contentElement, response.data.response);
+      // 분석 완료 표시 (재분석 방지)
       analyzedScripts.value[script] = true;
     }
+
   } catch (error) {
-    console.error("Analysis error:", error);
+    // 에러 발생 시 사용자 친화적인 에러 메시지 표시
+    // class="error"로 스타일링 가능
     const contentKey = `content-${script.replace(/\s+/g, "-")}`;
     const contentElement = document.querySelector(`[data-content="${contentKey}"]`);
     if (contentElement) {
       contentElement.innerHTML = '<p class="error">분석 중 오류가 발생했습니다.</p>';
     }
+    // 개발자 도구 콘솔에 자세한 에러 정보 기록
+    console.error("Analysis error:", error);
   } finally {
+    // 로딩 상태 해제
+    // 템플릿에서 v-if="loadingDisplay[script]"로 로딩 표시 제어
     loadingDisplay.value[script] = false;
   }
+};
+
+// ref를 사용하여 DOM 요소 접근 방식 수정
+const contentKey = `content-${script.replace(/\s+/g, "-")}`;
+const contentElement = document.querySelector(`[data-content="${contentKey}"]`);
+
+if (contentElement) {
+  // 타이핑 효과 적용
+  typeText(contentElement, response.data.response);
+  analyzedScripts.value[script] = true;
+}
+  } catch (error) {
+  console.error("Analysis error:", error);
+  const contentKey = `content-${script.replace(/\s+/g, "-")}`;
+  const contentElement = document.querySelector(`[data-content="${contentKey}"]`);
+  if (contentElement) {
+    contentElement.innerHTML = '<p class="error">분석 중 오류가 발생했습니다.</p>';
+  }
+} finally {
+  loadingDisplay.value[script] = false;
+}
 };
 
 const getCookie = (name) => {
@@ -644,7 +793,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-
 .details-btn {
   padding: 10px 20px;
   border-radius: 8px;
@@ -719,7 +867,7 @@ onMounted(async () => {
   background: white;
   padding: 12px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -740,6 +888,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -750,7 +899,7 @@ onMounted(async () => {
   .action-buttons {
     flex-wrap: wrap;
   }
-  
+
   .details-grid {
     grid-template-columns: 1fr;
   }
@@ -810,7 +959,7 @@ onMounted(async () => {
   padding: 20px;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .result-header {
@@ -874,10 +1023,19 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.6; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
+
 /* =============================== */
 
 .pagination {
@@ -1138,8 +1296,8 @@ onMounted(async () => {
 }
 
 .script-text {
- flex: 1;
- margin: 0;
+  flex: 1;
+  margin: 0;
 }
 
 .achievement-badge {
@@ -1157,45 +1315,45 @@ onMounted(async () => {
 }
 
 .achievement-badge.gold {
- background-color: #FFD700;
- color: #2C3E50;
- box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+  background-color: #FFD700;
+  color: #2C3E50;
+  box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
 }
 
 .achievement-badge.silver {
- background-color: #C0C0C0;
- color: #2C3E50;
- box-shadow: 0 2px 4px rgba(192, 192, 192, 0.3);
+  background-color: #C0C0C0;
+  color: #2C3E50;
+  box-shadow: 0 2px 4px rgba(192, 192, 192, 0.3);
 }
 
 .achievement-badge.bronze {
- background-color: #CD7F32;
- color: #FFFFFF;
- box-shadow: 0 2px 4px rgba(205, 127, 50, 0.3);
+  background-color: #CD7F32;
+  color: #FFFFFF;
+  box-shadow: 0 2px 4px rgba(205, 127, 50, 0.3);
 }
 
 .achievement-badge i {
- margin-right: 6px;
+  margin-right: 6px;
 }
 
 /* 동적 생성을 위한 트랜지션 효과 */
 .badge-fade-enter-active {
- transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
 }
 
 .badge-fade-leave-active {
- transition: all 0.3s ease-in;
+  transition: all 0.3s ease-in;
 }
 
 .badge-fade-enter-from,
 .badge-fade-leave-to {
- opacity: 0;
- transform: translateX(20px);
+  opacity: 0;
+  transform: translateX(20px);
 }
 
 /* 스크립트 카드 호버 효과에서도 뱃지가 잘 보이도록 */
 .script-card:hover .achievement-badge {
- z-index: 2;
+  z-index: 2;
 }
 
 .script-card:hover {
@@ -1209,26 +1367,30 @@ onMounted(async () => {
 
 /* script 부분 */
 .script-text {
- font-size: 18px;
- color: #2c3e50;
- line-height: 1.8;
- margin-right: 120px;
- position: relative;
- cursor: pointer;
- transition: all 0.3s ease;
- padding: 4px 8px;
- display: inline-block;  /* 텍스트 크기만큼만 차지하도록 변경 */
+  font-size: 18px;
+  color: #2c3e50;
+  line-height: 1.8;
+  margin-right: 120px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 4px 8px;
+  display: inline-block;
+  /* 텍스트 크기만큼만 차지하도록 변경 */
 }
 
 /* 심플한 hover 효과 */
 .script-text:hover {
- color: #ff6b6b;  /* 메인 컬러로 변경 */
- transform: translateX(4px);  /* 살짝 오른쪽으로 이동 */
+  color: #ff6b6b;
+  /* 메인 컬러로 변경 */
+  transform: translateX(4px);
+  /* 살짝 오른쪽으로 이동 */
 }
 
 /* 클릭 효과 */
 .script-text:active {
- transform: translateX(2px);  /* 클릭시 살짝 덜 이동 */
+  transform: translateX(2px);
+  /* 클릭시 살짝 덜 이동 */
 }
 
 
@@ -1293,6 +1455,7 @@ onMounted(async () => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -1310,6 +1473,7 @@ onMounted(async () => {
     margin: 0 auto;
   }
 }
+
 .movie-detail-container {
   max-width: 1200px;
   width: 100%;
@@ -1540,6 +1704,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1559,6 +1724,4 @@ onMounted(async () => {
   animation: fadeIn 0.6s ease-out 0.4s;
   animation-fill-mode: both;
 }
-
-
 </style>
